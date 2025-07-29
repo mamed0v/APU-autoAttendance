@@ -107,3 +107,16 @@ python3 submit_attendance.py 123
 python3 find_attendance_code.py
 ```
 A progress bar will appear, and hopefully, you'll see a success message with the found code! 🎉
+
+---
+
+## ⚡ Performance Benchmarks
+
+Here's a rough idea of how fast these scripts are. Your mileage may vary!
+
+-   **Viewing Attendance (first time, no session):** ~0.7 seconds
+-   **Viewing Attendance (with a valid session):** ~0.3 seconds
+-   **Submitting Attendance Code:** ~0.3 seconds
+-   **Brute-forcing 1000 OTPs:** ~7 seconds
+
+*The brute-force speed heavily depends on your internet connection and your computer's power.*
