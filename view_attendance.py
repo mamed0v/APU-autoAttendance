@@ -9,6 +9,15 @@ import logging
 from collections import defaultdict
 from dotenv import load_dotenv
 
+# ANSI escape codes for colors
+class Colors:
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BLUE = '\033[94m'
+    BOLD = '\033[1m'
+    ENDC = '\033[0m'
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -101,21 +110,32 @@ def get_attendance(session, st):
         return None
 
 def format_and_print_attendance(attendance_data):
-    """Formats and prints the attendance data."""
+    """Formats and prints the attendance data in a clean, colorful table."""
     if not attendance_data:
         logging.warning("No attendance data to display.")
         return
+
+    # Use a list to build the report string
+    report_lines = []
+    
+    report_lines.append(f"{Colors.BOLD}{'='*70}{Colors.ENDC}")
+    report_lines.append(f"{Colors.BOLD}{'ATTENDANCE REPORT'.center(70)}{Colors.ENDC}")
+    report_lines.append(f"{Colors.BOLD}{'='*70}{Colors.ENDC}")
 
     by_semester = defaultdict(list)
     for subject in attendance_data:
         by_semester[subject['SEMESTER']].append(subject)
 
-    # Use logging.info for the report output, so it's always visible
-    logging.info("\n" + "="*50 + "\n                ATTENDANCE REPORT\n" + "="*50)
-
     for semester in sorted(by_semester.keys(), reverse=True):
-        logging.info(f"\n--- SEMESTER {semester} ---")
+        report_lines.append(f"\n{Colors.BLUE}{Colors.BOLD}--- SEMESTER {semester} ---{Colors.ENDC}")
         subjects = by_semester[semester]
+        
+        # Find the maximum length of subject names for alignment
+        try:
+            max_len = max(len(s['MODULE_ATTENDANCE']) for s in subjects)
+        except ValueError:
+            max_len = 0 # Handle case where a semester might have no subjects
+
         for subject in subjects:
             name = subject['MODULE_ATTENDANCE']
             percentage = subject['PERCENTAGE']
@@ -123,15 +143,24 @@ def format_and_print_attendance(attendance_data):
             absent = subject['TOTAL_ABSENT']
             
             if percentage >= 80:
-                bar = "🟩" * int(percentage / 10)
+                color = Colors.GREEN
             elif percentage >= 70:
-                bar = "🟨" * int(percentage / 10)
+                color = Colors.YELLOW
             else:
-                bar = "🟥" * int(percentage / 10)
+                color = Colors.RED
+            
+            # Left-align the subject name, right-align the percentage for a clean look
+            padded_name = name.ljust(max_len)
+            
+            report_lines.append(
+                f"  {padded_name}  |  {color}{Colors.BOLD}{percentage:>3}%{Colors.ENDC}  |  "
+                f"Classes: {total:<2}, Absences: {absent:<2}"
+            )
 
-            logging.info(f"\n  {name}\n  {bar} {percentage}%\n  (Classes: {total}, Absences: {absent})")
+    report_lines.append(f"\n{Colors.BOLD}{'='*70}{Colors.ENDC}")
     
-    logging.info("\n" + "="*50 + "\n")
+    # Print the entire report at once to the console, without logging prefixes
+    print("\n" + "\n".join(report_lines) + "\n")
 
 
 def main():
